@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1115">
+  <title>Daily Tracker</title>
+
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #181b21;
+      --card-2: #20242c;
+      --text: #f5f7fa;
+      --muted: #8f96a3;
+      --border: #292e38;
+      --accent: #7c8cff;
+      --accent-soft: rgba(124, 140, 255, .14);
+      --danger: #ff6874;
+      --success: #63d69f;
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      background: var(--bg);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 620px;
+      margin: 0 auto;
+      padding:
+        max(20px, env(safe-area-inset-top))
+        16px
+        max(28px, env(safe-area-inset-bottom));
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 8px 0 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.1;
+      letter-spacing: -.04em;
+    }
+
+    .date {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 7px;
+    }
+
+    .progress-ring {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle, var(--bg) 61%, transparent 63%),
+        conic-gradient(var(--accent) var(--progress), var(--card-2) 0);
+      flex-shrink: 0;
+    }
+
+    .progress-ring span {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* Sections */
+    .section {
+      margin-bottom: 26px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 11px;
+      padding: 0 3px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -.02em;
+    }
+
+    .section-count {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .habit {
+      width: 100%;
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 14px 15px;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s ease, transform .1s ease;
+    }
+
+    .habit:last-child {
+      border-bottom: 0;
+    }
+
+    .habit:active {
+      background: var(--card-2);
+      transform: scale(.995);
+    }
+
+    .check {
+      width: 27px;
+      height: 27px;
+      border: 2px solid #4b5260;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      transition: .18s ease;
+    }
+
+    .check svg {
+      width: 16px;
+      height: 16px;
+      opacity: 0;
+      transform: scale(.5);
+      transition: .18s ease;
+    }
+
+    .habit.completed .check {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .habit.completed .check svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .habit-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .habit-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .habit.completed .habit-name {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .streak {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .streak strong {
+      color: #f3c969;
+      font-weight: 700;
+    }
+
+    /* Todo */
+    .todo-input {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 11px;
+    }
+
+    .todo-input input {
+      min-width: 0;
+      flex: 1;
+      height: 50px;
+      padding: 0 15px;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      outline: none;
+    }
+
+    .todo-input input::placeholder {
+      color: #707783;
+    }
+
+    .todo-input input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .add-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 15px;
+      background: var(--accent);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 25px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .add-btn:active {
+      transform: scale(.94);
+    }
+
+    .todo {
+      min-height: 61px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .todo:last-child {
+      border-bottom: 0;
+    }
+
+    .todo-check {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #4b5260;
+      border-radius: 50%;
+      background: transparent;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .todo.done .todo-check {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    .todo-check svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0;
+    }
+
+    .todo.done .todo-check svg {
+      opacity: 1;
+    }
+
+    .todo-text {
+      flex: 1;
+      min-width: 0;
+      font-size: 15px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .todo.done .todo-text {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .delete-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: transparent;
+      color: #747b87;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .delete-btn:active {
+      background: rgba(255, 104, 116, .12);
+      color: var(--danger);
+    }
+
+    .delete-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .empty {
+      padding: 25px 15px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Desktop */
+    @media (min-width: 700px) {
+      .app {
+        padding-top: 42px;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      .card {
+        box-shadow: 0 10px 35px rgba(0, 0, 0, .16);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+
+    <header>
+      <div>
+        <p class="eyebrow">Daily tracker</p>
+        <h1>Good morning 👋</h1>
+        <div class="date" id="todayDate"></div>
+      </div>
+
+      <div class="progress-ring" id="progressRing">
+        <span id="progressText">0%</span>
+      </div>
+    </header>
+
+    <!-- HABITS -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Habits</h2>
+        <span class="section-count" id="habitCount">0/0</span>
+      </div>
+
+      <div class="card" id="habitList"></div>
+    </section>
+
+    <!-- TODO -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Today's tasks</h2>
+        <span class="section-count" id="todoCount">0 left</span>
+      </div>
+
+      <form class="todo-input" id="todoForm">
+        <input
+          id="todoInput"
+          type="text"
+          maxlength="120"
+          placeholder="Add a quick task..."
+          autocomplete="off"
+        >
+        <button class="add-btn" type="submit" aria-label="Add task">+</button>
+      </form>
+
+      <div class="card" id="todoList"></div>
+    </section>
+
+  </main>
+
+  <script>
+    /* -----------------------------
+       Storage
+    ----------------------------- */
+
+    const STORAGE_KEY = "daily-tracker-v1";
+
+    const defaultHabits = [
+      { id: "water", name: "Drink enough water" },
+      { id: "exercise", name: "Exercise / move" },
+      { id: "study", name: "Study / learn" },
+      { id: "sleep", name: "Get 8 hours of sleep" }
+    ];
+
+    let state = loadState();
+
+    function todayKey() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+        if (!saved) {
+          return {
+            habits: defaultHabits.map(h => ({
+              ...h,
+              completed: {},
+              streak: 0
+            })),
+            todos: []
+          };
+        }
+
+        return {
+          habits: saved.habits || defaultHabits.map(h => ({
+            ...h,
+            completed: {},
+            streak: 0
+          })),
+          todos: saved.todos || []
+        };
+      } catch {
+        return {
+          habits: defaultHabits.map(h => ({
+            ...h,
+            completed: {},
+            streak: 0
+          })),
+          todos: []
+        };
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    /* -----------------------------
+       Date
+    ----------------------------- */
+
+    function formatDate() {
+      const date = new Date();
+
+      return date.toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric"
+      });
+    }
+
+    document.getElementById("todayDate").textContent = formatDate();
+
+    /* -----------------------------
+       Streak calculation
+    ----------------------------- */
+
+    function dateBefore(dateString, days) {
+      const d = new Date(dateString + "T00:00:00");
+      d.setDate(d.getDate() - days);
+
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+
+      return `${y}-${m}-${day}`;
+    }
+
+    function calculateStreak(habit) {
+      const today = todayKey();
+
+      // Count consecutive completed days ending today.
+      if (!habit.completed[today]) {
+        return 0;
+      }
+
+      let streak = 0;
+
+      while (habit.completed[dateBefore(today, streak)]) {
+        streak++;
+      }
+
+      return streak;
+    }
+
+    /* -----------------------------
+       Render habits
+    ----------------------------- */
+
+    function renderHabits() {
+      const container = document.getElementById("habitList");
+      const today = todayKey();
+
+      if (!state.habits.length) {
+        container.innerHTML =
+          '<div class="empty">No habits yet.</div>';
+        return;
+      }
+
+      container.innerHTML = state.habits.map(habit => {
+        const completed = !!habit.completed[today];
+        const streak = calculateStreak(habit);
+
+        return `
+          <button
+            class="habit ${completed ? "completed" : ""}"
+            data-habit="${escapeHTML(habit.id)}"
+            type="button"
+          >
+            <span class="check">
+              <svg viewBox="0 0 24 24" fill="none"
+                   stroke="white" stroke-width="3"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12l4 4L19 7"/>
+              </svg>
+            </span>
+
+            <span class="habit-info">
+              <span class="habit-name">
+                ${escapeHTML(habit.name)}
+              </span>
+
+              <span class="streak">
+                ${streak > 0
+                  ? `<strong>🔥 ${streak}</strong> day streak`
+                  : "Start your streak today"}
+              </span>
+            </span>
+          </button>
+        `;
+      }).join("");
+
+      container.querySelectorAll(".habit").forEach(button => {
+        button.addEventListener("click", () => {
+          toggleHabit(button.dataset.habit);
+        });
+      });
+
+      updateProgress();
+    }
+
+    function toggleHabit(id) {
+      const habit = state.habits.find(h => h.id === id);
+      if (!habit) return;
+
+      const today = todayKey();
+
+      if (!habit.completed) {
+        habit.completed = {};
+      }
+
+      habit.completed[today] = !habit.completed[today];
+
+      saveState();
+      renderHabits();
+    }
+
+    /* -----------------------------
+       Progress
+    ----------------------------- */
+
+    function updateProgress() {
+      const today = todayKey();
+
+      const completed = state.habits.filter(
+        habit => habit.completed && habit.completed[today]
+      ).length;
+
+      const total = state.habits.length;
+      const percentage = total
+        ? Math.round((completed / total) * 100)
+        : 0;
+
+      document.getElementById("habitCount").textContent =
+        `${completed}/${total}`;
+
+      document.getElementById("progressText").textContent =
+        `${percentage}%`;
+
+      document.getElementById("progressRing")
+        .style.setProperty("--progress", `${percentage}%`);
+    }
+
+    /* -----------------------------
+       Todos
+    ----------------------------- */
+
+    function renderTodos() {
+      const container = document.getElementById("todoList");
+
+      if (!state.todos.length) {
+        container.innerHTML =
+          '<div class="empty">No tasks yet. Add something small to get started.</div>';
+        updateTodoCount();
+        return;
+      }
+
+      container.innerHTML = state.todos.map(todo => `
+        <div class="todo ${todo.done ? "done" : ""}">
+          <button
+            class="todo-check"
+            type="button"
+            data-id="${escapeHTML(todo.id)}"
+            aria-label="Complete task"
+          >
+            <svg viewBox="0 0 24 24" fill="none"
+                 stroke="white" stroke-width="3"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12l4 4L19 7"/>
+            </svg>
+          </button>
+
+          <span class="todo-text">
+            ${escapeHTML(todo.text)}
+          </span>
+
+          <button
+            class="delete-btn"
+            type="button"
+            data-delete="${escapeHTML(todo.id)}"
+            aria-label="Delete task"
+          >
+            <svg viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round">
+              <path d="M6 6l12 12M18 6L6 18"/>
+            </svg>
+          </button>
+        </div>
+      `).join("");
+
+      container.querySelectorAll(".todo-check").forEach(button => {
+        button.addEventListener("click", () => {
+          toggleTodo(button.dataset.id);
+        });
+      });
+
+      container.querySelectorAll(".delete-btn").forEach(button => {
+        button.addEventListener("click", () => {
+          deleteTodo(button.dataset.delete);
+        });
+      });
+
+      updateTodoCount();
+    }
+
+    function addTodo(text) {
+      state.todos.unshift({
+        id: Date.now().toString(),
+        text: text.trim(),
+        done: false
+      });
+
+      saveState();
+      renderTodos();
+    }
+
+    function toggleTodo(id) {
+      const todo = state.todos.find(t => t.id === id);
+
+      if (!todo) return;
+
+      todo.done = !todo.done;
+
+      saveState();
+      renderTodos();
+    }
+
+    function deleteTodo(id) {
+      state.todos = state.todos.filter(t => t.id !== id);
+
+      saveState();
+      renderTodos();
+    }
+
+    function updateTodoCount() {
+      const remaining = state.todos.filter(t => !t.done).length;
+
+      document.getElementById("todoCount").textContent =
+        `${remaining} ${remaining === 1 ? "left" : "left"}`;
+    }
+
+    document.getElementById("todoForm").addEventListener("submit", event => {
+      event.preventDefault();
+
+      const input = document.getElementById("todoInput");
+      const text = input.value.trim();
+
+      if (!text) {
+        input.focus();
+        return;
+      }
+
+      addTodo(text);
+
+      input.value = "";
+      input.focus();
+    });
+
+    /* -----------------------------
+       Security helper
+    ----------------------------- */
+
+    function escapeHTML(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    /* -----------------------------
+       Start app
+    ----------------------------- */
+
+    renderHabits();
+    renderTodos();
+
+    // Re-render if the date changes while the app stays open.
+    let currentDay = todayKey();
+
+    setInterval(() => {
+      const newDay = todayKey();
+
+      if (newDay !== currentDay) {
+        currentDay = newDay;
+        document.getElementById("todayDate").textContent = formatDate();
+        renderHabits();
+      }
+    }, 60 * 1000);
+  </script>
+</body>
+</html>
