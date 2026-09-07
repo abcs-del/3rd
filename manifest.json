@@ -1,7 +1,8 @@
 {
   "name": "Daily Tracker",
   "short_name": "Tracker",
-  "start_url": "./index.html",
+  "start_url": "/3rd/index.html",
+  "scope": "/3rd/",
   "display": "standalone",
   "background_color": "#0f1115",
   "theme_color": "#0f1115",
